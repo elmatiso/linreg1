@@ -1,0 +1,29 @@
+---
+title: "Models"
+output: html_document
+---
+
+```{r}
+load('../Data/weather.rda') # load data 
+library(ggplot2)
+```
+```{r}
+summary(weather$location)
+```
+
+```{r}
+ggplot(data = weather, aes(x = (temp + 273), y = log(rain)))+
+  geom_point() + 
+  facet_wrap(~location)
+```
+
+```{r}
+model.1a <- lm(rain ~ temp, data = weather)
+model.1b <- lm(log(rain) ~ temp, data = weather)
+model.2c <- lm(log(rain) ~ temp + pressure, data = weather)
+model.2h <- lm(log(rain)~temp*pressure, data = weather)
+weather$location <- relevel(weather$location, "Uppsala")
+model.2n <- lm(log(rain) ~ temp*pressure + location, data = weather)
+```
+
+
