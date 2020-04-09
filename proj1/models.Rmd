@@ -4,9 +4,10 @@ output: html_document
 ---
 
 ```{r}
-load('../Data/weather.rda') # load data 
+load('weather.rda') # load data 
 library(ggplot2)
 ```
+
 ```{r}
 summary(weather$location)
 ```
