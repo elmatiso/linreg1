@@ -1,0 +1,173 @@
+---
+title: "part 3"
+output: html_document
+---
+Loading data and fitting models. 
+```{r}
+load('weather.rda') # load data 
+library(ggplot2)
+model.1a <- lm(rain ~ temp, data = weather)
+model.1b <- lm(log(rain) ~ temp, data = weather)
+model.2c <- lm(log(rain) ~ temp + pressure, data = weather)
+model.2h <- lm(log(rain)~temp*pressure, data = weather)
+weather$location <- relevel(weather$location, "Uppsala")
+model.2n <- lm(log(rain) ~ temp*pressure + location, data = weather)
+```
+
+# 3.1 Outliers and influential observations
+Since the leverage is a measure of how much an observation is an outlier with respect to the feature space, it will be higher for points with "unusual" features. This means the leverages will, in general, be higher for more unusual locations. 
+```{r}
+model.2n$leverages <- influence(model.2n)$hat 
+weather$leverage <- model.2n$leverages
+n = nrow(weather)
+p = length(model.2n$coefficients)
+plot.3a <- ggplot(data = weather, aes(y = leverage)) + 
+  geom_hline(yintercept = 1/n, color = "red", linetype = "dashed") + 
+  geom_hline(yintercept = 2*(p+1)/n, color = "red") + 
+  geom_hline(yintercept = 0.026) + 
+  facet_wrap(~location)
+
+plot.3a.temp <- plot.3a +
+  geom_point(aes(x = temp))
+plot.3a.pressure <- plot.3a + 
+  geom_point(aes(x = pressure))
+
+plot.3a.temp
+plot.3a.pressure
+``` 
+
+## 3 b) 
+The leverage is high since they are have are outliers in the temp-pressure plane. None of the points are really outliers in temperature (can bee seen by projecting points on the y axis), while some of them are outliers in pressures and some not (project points ot x axis). 
+```{r}
+problematic_indices = which(weather$leverage > 0.026 )
+plot.3b <- ggplot(weather, aes(x = pressure, y = temp)) + 
+  geom_point() + 
+  geom_point(data = weather[problematic_indices, ], color = "red") + 
+  facet_wrap(~location)
+plot.3b
+```
+
+## 3 c) 
+```{r}
+model.2n.pred <- pred.8c <- cbind(weather, 
+                 conf = (predict(model.2n, interval = "confidence")),
+                 pred = (predict(model.2n, interval = "prediction"))) 
+model.2n.pred$stud.res <- rstudent(model.2n)
+plot.3c <- ggplot(data = model.2n.pred, aes(x = pred.fit, y = (stud.res)))+
+  geom_point() + 
+  geom_point(data = model.2n.pred[problematic_indices,], color = "red") + 
+  facet_wrap(~location)
+plot.3c
+```
+
+## 3 d) 
+```{r}
+uppsala_index = which(abs(model.2n.pred$stud.res) > 8)
+abisko_index = which(abs(model.2n.pred$stud.res) > 3 & model.2n.pred$location == "Abisko")
+lund_index = which(abs(model.2n.pred$stud.res) > 3 & model.2n.pred$location == "Lund")
+plot.3c.temp <- ggplot(data = model.2n.pred, aes(y = log(rain), x = temp)) + 
+  geom_point() + 
+  geom_point(data = model.2n.pred[problematic_indices,], color = "red")+
+  facet_wrap(~location) + 
+  geom_point(data = model.2n.pred[c(uppsala_index, abisko_index, lund_index),], color = "green")
+plot.3c.temp
+plot.3c.pressure <-ggplot(data = model.2n.pred, aes(y = log(rain), x = pressure)) + 
+  geom_point() + 
+  geom_point(data = model.2n.pred[problematic_indices,], color = "red")+
+  facet_wrap(~location) + 
+  geom_point(data = model.2n.pred[c(uppsala_index, abisko_index, lund_index),], color = "green")
+
+plot.3c.pressure
+```
+
+## 3 e) 
+```{r}
+model.2n.pred$D <- cooks.distance(model.2n)
+plot.3e <- ggplot(model.2n.pred, aes(x = temp, y = D)) + 
+  geom_point() + 
+  geom_point(data = model.2n.pred[problematic_indices, ], color = "red") +
+  geom_point(data = model.2n.pred[c(uppsala_index, abisko_index, lund_index),], color = "green")
+plot.3e
+```
+
+## 3f) 
+```{r}
+large_leverage_points = problematic_indices
+large_residual_points = c(uppsala_index, abisko_index, lund_index)
+large_D_points = which(model.2n.pred$D > 0.02) # the 5 largest ones
+weather.clean = weather[-c(large_residual_points, large_D_points),] #remove 5 points with highest Cook's D, and the two other with large residuals 
+weather.clean$location <- relevel(weather.clean$location, "Uppsala")
+model.3f <- lm(log(rain) ~ temp*pressure + location, data = weather.clean)
+weather.clean$stud.res <- rstudent(model.3f)
+weather.clean$D <- cooks.distance(model.3f)
+plot.3f.D <- ggplot(data= weather.clean, aes(x = temp,y = D)) + 
+  geom_point()
+plot.3f.res <- ggplot(data = weather.clean, aes(x = temp, y = stud.res)) + 
+  geom_point()
+plot.3f.D
+plot.3f.res
+```
+
+# 3.2 Model comparisons 
+## 3g) 
+last model (2n) is best, and it explains ~ 40% of the variability in the data 
+```{r}
+model.1b.clean <- lm(log(rain) ~ temp, data = weather)
+model.2c.clean <- lm(log(rain) ~ temp + pressure, data = weather)
+model.2h.clean <- lm(log(rain)~temp*pressure, data = weather)
+model.2n.clean <- model.3f
+R2<- c(summary(model.1b.clean)$r.squared, summary(model.2c.clean)$r.squared, summary(model.2h.clean)$r.squared, summary(model.2n.clean)$r.squared)
+R2_adj<- c(summary(model.1b.clean)$adj.r.squared, summary(model.2c.clean)$adj.r.squared, summary(model.2h.clean)$adj.r.squared, summary(model.2n.clean)$adj.r.squared)
+
+(measures <- data.frame(
+                        R2, 
+                        R2_adj,
+                        AIC(model.1b.clean, model.2c.clean,model.2h.clean, model.2n.clean)[2],
+                        BIC(model.1b.clean, model.2c.clean,model.2h.clean, model.2n.clean)[2]))
+```
+
+## 3h) 
+p-value for partial f-test is almost 0.3 i.e. no significant improvement
+```{r}
+model.3h.clean <- lm (log(rain)~temp*location*pressure, weather.clean)
+anova(model.2n.clean, model.3h.clean)
+```
+
+## 3 i) 
+The backward elimination stops the best of our previous models i.e. model 2n). 
+```{r}
+step(model.3h.clean, k = log(nrow(weather.clean)))
+
+```
+
+## 3 j) 
+arrive at the same model, adding pressure as the first variable. 
+```{r}
+step(lm(log(rain)~1, data = weather.clean), 
+     scope = list(upper = model.3h.clean), 
+     direction = "forward", k = log(nrow(weather.clean)))
+```
+
+## 3 k) 
+Sincer there are approximately the same number of observations for each season there is no need to relevel. THe result of the forward selection implies seasonal differences. The partial F-test shows that the final model is a significant improvment on the previous best (2n) - p-value < 1e-11! The final model now explains more than 42% of the variability. 
+```{r}
+weather.clean$season <- "Winter"
+weather.clean$season[weather.clean$monthnr > 2 & weather.clean$monthnr < 6] <- "Spring"
+weather.clean$season[weather.clean$monthnr > 5 & weather.clean$monthnr < 9] <- "Summer"
+weather.clean$season[weather.clean$monthnr > 8 & weather.clean$monthnr < 12] <- "Fall"
+weather.clean$season <-
+  factor(weather.clean$season,
+         levels = c("Winter", "Spring", "Summer", "Fall"),
+         labels = c("Winter", "Spring", "Summer", "Fall"))
+summary(weather.clean$season)
+step(lm(log(rain)~1, data = weather.clean), 
+     scope = list(upper = lm(log(rain)~ temp*pressure*location*season, data = weather.clean)), 
+     direction = "forward", k = log(nrow(weather.clean)))
+model.final <- lm(log(rain)~ temp*pressure + season + location, data = weather.clean)
+anova(model.2n.clean, model.final)
+summary(model.final)$r.squared
+summary(model.final)$adj.r.squared
+
+
+```
+
