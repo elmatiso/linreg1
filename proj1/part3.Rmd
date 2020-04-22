@@ -33,7 +33,15 @@ plot.3a.pressure <- plot.3a +
   geom_point(aes(x = pressure))
 
 plot.3a.temp
+ggsave(
+  "fig3a_temp.png",
+  device = "png"
+)
 plot.3a.pressure
+ggsave(
+  "fig3a_pressure.png",
+  device = "png"
+)
 ``` 
 
 ## 3 b) 
@@ -45,6 +53,10 @@ plot.3b <- ggplot(weather, aes(x = pressure, y = temp)) +
   geom_point(data = weather[problematic_indices, ], color = "red") + 
   facet_wrap(~location)
 plot.3b
+ggsave(
+  "fig3b.png",
+  device = "png"
+)
 ```
 
 ## 3 c) 
@@ -58,6 +70,10 @@ plot.3c <- ggplot(data = model.2n.pred, aes(x = pred.fit, y = (stud.res)))+
   geom_point(data = model.2n.pred[problematic_indices,], color = "red") + 
   facet_wrap(~location)
 plot.3c
+ggsave(
+  "fig3c.png",
+  device = "png"
+)
 ```
 
 ## 3 d) 
@@ -71,6 +87,10 @@ plot.3c.temp <- ggplot(data = model.2n.pred, aes(y = log(rain), x = temp)) +
   facet_wrap(~location) + 
   geom_point(data = model.2n.pred[c(uppsala_index, abisko_index, lund_index),], color = "green")
 plot.3c.temp
+ggsave(
+  "fig3c_temp.png",
+  device = "png"
+)
 plot.3c.pressure <-ggplot(data = model.2n.pred, aes(y = log(rain), x = pressure)) + 
   geom_point() + 
   geom_point(data = model.2n.pred[problematic_indices,], color = "red")+
@@ -78,6 +98,10 @@ plot.3c.pressure <-ggplot(data = model.2n.pred, aes(y = log(rain), x = pressure)
   geom_point(data = model.2n.pred[c(uppsala_index, abisko_index, lund_index),], color = "green")
 
 plot.3c.pressure
+ggsave(
+  "fig3c_pressure.png",
+  device = "png"
+)
 ```
 
 ## 3 e) 
@@ -88,6 +112,10 @@ plot.3e <- ggplot(model.2n.pred, aes(x = temp, y = D)) +
   geom_point(data = model.2n.pred[problematic_indices, ], color = "red") +
   geom_point(data = model.2n.pred[c(uppsala_index, abisko_index, lund_index),], color = "green")
 plot.3e
+ggsave(
+  "fig3e.png",
+  device = "png"
+)
 ```
 
 ## 3f) 
@@ -105,7 +133,15 @@ plot.3f.D <- ggplot(data= weather.clean, aes(x = temp,y = D)) +
 plot.3f.res <- ggplot(data = weather.clean, aes(x = temp, y = stud.res)) + 
   geom_point()
 plot.3f.D
+ggsave(
+  "fig3f_D.png",
+  device = "png"
+)
 plot.3f.res
+ggsave(
+  "fig3f_res.png",
+  device = "png"
+)
 ```
 
 # 3.2 Model comparisons 
@@ -169,5 +205,10 @@ summary(model.final)$r.squared
 summary(model.final)$adj.r.squared
 
 
+```
+
+```{r}
+library(rmarkdown)
+rmarkdown::render("part3.Rmd", output_format = latex_document())
 ```
 
