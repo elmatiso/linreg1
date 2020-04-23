@@ -1,0 +1,18 @@
+\begin{table}[H]
+\centering
+\begin{tabular}{|
+>{\columncolor[HTML]{FFFFFF}}l |
+>{\columncolor[HTML]{FFFFFF}}l |
+>{\columncolor[HTML]{FFFFFF}}l |
+>{\columncolor[HTML]{FFFFFF}}l |
+>{\columncolor[HTML]{FFFFFF}}l |}
+\hline
+Model parameters                  & $R^2$     & $R^2_{adj}$ & AIC      & BIC      \\ \hline
+Temperature                       & 0.1106402 & 0.1098235   & 2434.717 & 2449.702 \\ \hline
+Temperature + Pressure            & 0.2877870 & 0.2864778   & 2194.379 & 2214.359 \\ \hline
+Temperature * Pressure            & 0.3161416 & 0.3142543   & 2152.056 & 2177.030 \\ \hline
+Temperature * Pressure + Location & 0.3980373 & 0.3952453   & 1884.574 & 1919.493 \\ \hline
+\end{tabular}
+\caption{Scores for the different models, refitted with smaller data set.}
+\label{resulttable}
+\end{table}
